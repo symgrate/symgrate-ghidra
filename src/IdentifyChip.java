@@ -23,6 +23,7 @@ import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Set;
 
 public class IdentifyChip extends GhidraScript {
@@ -55,7 +56,6 @@ public class IdentifyChip extends GhidraScript {
         JsonArray obj = gson.fromJson(json, JsonArray.class);
         for(int i=0; i<obj.size(); i++){
             JsonElement el=obj.get(i);
-            //println(el.toString());
             JsonObject guess=el.getAsJsonObject();
             Set<String> keys = guess.keySet();
             String name=guess.get("Name").toString();
@@ -66,8 +66,12 @@ public class IdentifyChip extends GhidraScript {
 
     @Override
     protected void run() throws Exception {
+        //Just for deduplication.
+        HashMap<Long, String> hm= new HashMap<>();
+
         StringBuilder q=new StringBuilder();
-        Instruction instruction = getInstructionAt(getAddressFactory().getAddress("1fff1318"));
+        //Instruction instruction = getInstructionAt(getAddressFactory().getAddress("1fff1318"));
+        Instruction instruction = getFirstInstruction();
         while(!monitor.isCancelled() && instruction!=null){
             String istr=instruction.toString();
 
@@ -81,21 +85,24 @@ public class IdentifyChip extends GhidraScript {
                     if (a.isMemoryAddress()) {
                         //println(instruction.getAddress().toString());
                         long source = (currentProgram.getMemory().getInt(a));
-                        if ((source & 0x0F0000000) == 0x040000000)
+                        if ((source & 0x0F0000000) == 0x040000000 && !hm.containsKey(source)) {
                             q.append(String.format("0x%x=r&", source));
+                            hm.put(source,"Whatever");  //So we don't add the same port twice.
+                        }
                     }
                     if (b.isMemoryAddress()) {
                         //println(a.toString());
                         long dest = (currentProgram.getMemory().getInt(b));
-                        if ((dest & 0x0F0000000) == 0x040000000)
+                        if ((dest & 0x0F0000000) == 0x040000000 && !hm.containsKey(dest)) {
                             q.append(String.format("0x%x=r&", dest));
+                            hm.put(dest,"Whatever");  //So we don't add the same port twice.
+                        }
                     }
                 }
             }
 
             instruction = getInstructionAfter(instruction);
         }
-
         importresult(queryjregs(q.toString()));
     }
 }
