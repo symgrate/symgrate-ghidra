@@ -4,7 +4,8 @@
  */
 //Queries symgrate.com to recover Thumb2 function names.
 //@category    Symgrate
-//@menupath    Tools.Symgrate.NameFunctions
+//@author      Travis Goodspeed and EVM
+//@menupath    Tools.Symgrate.Name Functions
 
 
 
@@ -35,7 +36,7 @@ public class NameFunctions extends GhidraScript{
             .build();
 
     //Perform the HTTPS query.
-    String queryfns(String suffix) throws InterruptedException, IOException {
+    String queryjfns(String suffix) throws InterruptedException, IOException {
         String requestURL = "https://symgrate.com/jfns?"+suffix;
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
@@ -109,14 +110,12 @@ public class NameFunctions extends GhidraScript{
                 q.append("=");
                 q.append(data);
                 q.append("&");
-            }else {
-                //println("Skipping short function at "+adr);
             }
 
             f=getFunctionAfter(f);
 
             if((i&0xFF)==0xFF || f==null){
-                importresult(queryfns(q.toString()));
+                importresult(queryjfns(q.toString()));
                 q=new StringBuilder();
                 monitor.setProgress(i);
             }
