@@ -60,6 +60,8 @@ public class IdentifyChip extends GhidraScript {
             Set<String> keys = guess.keySet();
             String name=guess.get("Name").toString();
             println(name);
+	    String query_str = guess.toString();
+	    println(query_str);
         }
     }
 
